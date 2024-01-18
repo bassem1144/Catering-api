@@ -10,14 +10,25 @@ class Facility
     private $location;
     private $tags = [];
 
+    public function setName(string $name): Facility
+    {
+        $this->name = $name;
+        return $this;
+    }
+
     public function getName(): string
     {
         return $this->name;
     }
 
-    public function setName(string $name): Facility
+    public function setCreationDate(): Facility
     {
-        $this->name = $name;
+        $this->creationDate = date("Y-m-d H:i:s");
         return $this;
+    }
+
+    public function getCreationDate(): string
+    {
+        return $this->creationDate;
     }
 }

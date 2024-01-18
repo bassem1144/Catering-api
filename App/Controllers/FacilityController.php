@@ -12,8 +12,12 @@ class FacilityController extends BaseController
     {
         $facility = new Facility;
         $facility->setName($_POST['name']);
+        $facility->setCreationDate();
 
-        $query = "INSERT INTO facilities (name) VALUES ('" . $facility->getName() . "')";
+        $query = "INSERT INTO facilities (name , creation_date) VALUES ('" . $facility->getName() . "', '" . $facility->getCreationDate() . "')";
+        
         $this->db->executeQuery($query);
+
+        var_dump($query);
     }
 }

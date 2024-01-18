@@ -1,6 +1,7 @@
 <?php
 
 use App\Controllers\IndexController;
+use App\Controllers\FacilityController;
 
 /** @var Bramus\Router\Router $router */
 
