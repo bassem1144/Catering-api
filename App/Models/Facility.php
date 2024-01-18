@@ -9,15 +9,4 @@ class Facility
     private $creationDate;
     private $location;
     private $tags = [];
-
-    public function getName(): string
-    {
-        return $this->name;
-    }
-
-    public function setName(string $name): Facility
-    {
-        $this->name = $name;
-        return $this;
-    }
 }
