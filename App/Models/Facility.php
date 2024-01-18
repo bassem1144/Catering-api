@@ -31,4 +31,15 @@ class Facility
     {
         return $this->creationDate;
     }
+
+    public function setLocation(Location $location): Facility
+    {
+        $this->location = $location;
+        return $this;
+    }
+
+    public function getLocation(): Location
+    {
+        return $this->location;
+    }
 }
