@@ -4,7 +4,7 @@ namespace App\Controllers;
 
 use App\Models\Facility;
 use App\Models\Location;
-use PDO;
+use App\Models\Tag;
 
 class FacilityController extends BaseController
 {
