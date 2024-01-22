@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Models\Tag;
+
 class Facility
 {
     private $id;
@@ -41,5 +43,16 @@ class Facility
     public function getLocation(): Location
     {
         return $this->location;
+    }
+
+    public function addTag(Tag $tag): Facility
+    {
+        $this->tags[] = $tag;
+        return $this;
+    }
+
+    public function getTags(): array
+    {
+        return $this->tags;
     }
 }
