@@ -47,12 +47,20 @@ class Db implements IDb {
      * @param array $bind
      * @return bool
      */
-    public function executeQuery(string $query, array $bind = []): bool {
+    public function executeQuery(string $query, array $bind = [])
+    {
         $this->stmt = $this->connection->prepare($query);
-        if ($bind) {
-            return $this->stmt->execute($bind);
+
+        if ($this->stmt->execute($bind)) {
+            return $this->stmt;
+        } else {
+            // Include additional debugging information
+            $errorInfo = $this->stmt->errorInfo();
+            $errorCode = $this->stmt->errorCode();
+            echo "Query execution failed. Error code: $errorCode. Error info: " . print_r($errorInfo, true) . "\n";
         }
-        return $this->stmt->execute();
+
+        return false;
     }
 
     /**

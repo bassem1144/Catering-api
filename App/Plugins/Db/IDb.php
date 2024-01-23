@@ -9,7 +9,7 @@ interface IDb {
      * @param array $bind
      * @return bool
      */
-    public function executeQuery(string $query, array $bind = []): bool;
+    public function executeQuery(string $query, array $bind = []);
 
     /**
      * Function to retrieve the last inserted id
