@@ -2,12 +2,45 @@
 
 namespace App\Controllers;
 
+use PDO;
+use App\Models\Tag;
 use App\Models\Facility;
 use App\Models\Location;
-use App\Models\Tag;
 
 class FacilityController extends BaseController
 {
+
+    public function showAll()
+    {
+        // Fetch all facilities with their locations and tags
+        $query = "SELECT facilities.*, locations.*, GROUP_CONCAT(tags.tag_name SEPARATOR ', ') as tag_names
+                  FROM facilities
+                  LEFT JOIN locations ON facilities.location_id = locations.location_id
+                  LEFT JOIN facilitytags ON facilities.facility_id = facilitytags.facility_id
+                  LEFT JOIN tags ON facilitytags.tag_id = tags.tag_id
+                  GROUP BY facilities.facility_id";
+
+        $result = $this->db->executeQuery($query);
+
+        // Check if there are any results
+        if ($result !== false) {
+            $facilities = $result->fetchAll(PDO::FETCH_ASSOC);
+
+            // Display the data 
+            foreach ($facilities as $facility) {
+                echo "Facility ID: {$facility['facility_id']}\n";
+                echo "Name: {$facility['name']}\n";
+                echo "Creation Date: {$facility['creation_date']}\n";
+                echo "Location: {$facility['city']}, {$facility['address']}, {$facility['zip_code']}, {$facility['country_code']}\n";
+                echo "Tags: {$facility['tag_names']}\n";
+                echo "\n";
+            }
+        } else {
+            // Handle error or show a message if no facilities are found
+            echo "No facilities found.";
+        }
+    }
+
 
     public function create()
     {
