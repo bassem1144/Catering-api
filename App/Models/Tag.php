@@ -17,4 +17,15 @@ class Tag
         $this->name = $name;
         return $this;
     }
+
+    public function getId(): int
+    {
+        return $this->id;
+    }
+
+    public function setId(int $id): Tag
+    {
+        $this->id = $id;
+        return $this;
+    }
 }
