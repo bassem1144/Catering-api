@@ -30,8 +30,13 @@ class FacilityController extends BaseController
             foreach ($facilities as $facility) {
                 echo "Facility ID: {$facility['facility_id']}\n";
                 echo "Name: {$facility['name']}\n";
+                echo "City: {$facility['city']}\n";
+                echo "Address: {$facility['address']}\n";
+                echo "Zip Code: {$facility['zip_code']}\n";
+                echo "Country Code: {$facility['country_code']}\n";
+                echo "Phone Number: {$facility['phone_number']}\n";
                 echo "Creation Date: {$facility['creation_date']}\n";
-                echo "Location: {$facility['city']}, {$facility['address']}, {$facility['zip_code']}, {$facility['country_code']}\n";
+
                 // Check if the facility has any tags
                 if (!empty($facility['tag_names'])) {
                     echo "Tags: {$facility['tag_names']}\n";
@@ -67,8 +72,12 @@ class FacilityController extends BaseController
             if ($facilityData) {
                 echo "Facility ID: {$facilityData['facility_id']}\n";
                 echo "Name: {$facilityData['name']}\n";
+                echo "City: {$facilityData['city']}\n";
+                echo "Address: {$facilityData['address']}\n";
+                echo "Zip Code: {$facilityData['zip_code']}\n";
+                echo "Country Code: {$facilityData['country_code']}\n";
+                echo "Phone Number: {$facilityData['phone_number']}\n";
                 echo "Creation Date: {$facilityData['creation_date']}\n";
-                echo "Location: {$facilityData['city']}, {$facilityData['address']}, {$facilityData['zip_code']}, {$facilityData['country_code']}\n";
 
                 // Check if there are tags associated with the facility
                 if (!empty($facilityData['tag_names'])) {
