@@ -132,7 +132,7 @@ class FacilityController extends BaseController
 
             // Handle tags
             if (isset($_POST['tags'])) {
-                $tagsArray = explode(", ", $_POST['tags']);
+                $tagsArray = explode(",", $_POST['tags']);
             } else {
                 $tagsArray = null;
             }
@@ -187,4 +187,83 @@ class FacilityController extends BaseController
             echo "Error: " . $e->getMessage();
         }
     }
+
+    public function update($facilityId)
+    {
+        // Get the updated data from the API request
+        $putData = file_get_contents('php://input');
+        parse_str($putData, $formData);
+
+        // Define update queries and fields
+        $updateQueries = [
+            'name' => "UPDATE facilities SET name = ? WHERE facility_id = ?",
+            'city' => "UPDATE locations SET city = ? WHERE location_id = ?",
+            'address' => "UPDATE locations SET address = ? WHERE location_id = ?",
+            'zip_code' => "UPDATE locations SET zip_code = ? WHERE location_id = ?",
+            'country_code' => "UPDATE locations SET country_code = ? WHERE location_id = ?",
+            'phone_number' => "UPDATE locations SET phone_number = ? WHERE location_id = ?",
+        ];
+
+        // loop through the fields and execute the update queries
+        foreach ($updateQueries as $field => $query) {
+            if (isset($formData[$field])) {
+                $this->db->executeQuery($query, [$formData[$field], $facilityId]);
+                echo "Facility {$field} updated successfully!\n";
+            }
+        }
+
+        // Handle tags
+        if (isset($formData['tags'])) {
+            $tagsArray = explode(",", $formData['tags']);
+
+            // Delete existing tags for the facility
+            $deleteTagsQuery = "DELETE FROM facilitytags WHERE facility_id = ?";
+            $this->db->executeQuery($deleteTagsQuery, [$facilityId]);
+
+            foreach ($tagsArray as $tagName) {
+                // Check if the tag already exists
+                $tagQuery = "SELECT tag_id FROM tags WHERE tag_name = ?";
+                $tagBind = [$tagName];
+
+                $existingTagId = $this->db->executeQuery($tagQuery, $tagBind)->fetchColumn();
+
+                if ($existingTagId) {
+                    // If tag exists, use the existing tag
+                    $tag = new Tag;
+                    $tag->setId($existingTagId);
+                } else {
+                    // If tag doesn't exist, create a new tag
+                    $tag = new Tag;
+                    $tag->setName($tagName);
+
+                    // Insert the tag into the database
+                    $tagQuery = "INSERT INTO tags (tag_name) VALUES (?)";
+                    $tagBind = [$tag->getName()];
+                    $this->db->executeQuery($tagQuery, $tagBind);
+
+                    // Get the tag ID from the last inserted row
+                    $tag->setId($this->db->getLastInsertedId());
+                }
+
+                // Insert the association into the FacilityTags table
+                $facilityTagQuery = "INSERT INTO facilitytags (facility_id, tag_id) VALUES (?, ?)";
+                $facilityTagBind = [$facilityId, $tag->getId()];
+                $this->db->executeQuery($facilityTagQuery, $facilityTagBind);
+            }
+            echo "Tags added successfully!\n";
+        }
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
 }
