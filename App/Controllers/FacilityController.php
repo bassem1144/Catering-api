@@ -45,18 +45,12 @@ class FacilityController extends BaseController
             // Get the facility ID from the last inserted row
             $facilityId = $this->db->getLastInsertedId();
 
-
-
-
-
-
-
-
-
-
-
             // Handle tags
-            $tagsArray = explode(", ", $_POST['tags']);
+            if (isset($_POST['tags'])) {
+                $tagsArray = explode(", ", $_POST['tags']);
+            } else {
+                $tagsArray = null;
+            }
 
             if (isset($tagsArray) && is_array($tagsArray)) {
                 foreach ($tagsArray as $tagName) {
@@ -94,21 +88,9 @@ class FacilityController extends BaseController
                 }
             }
 
-
-
-
-
-
-
-
-
-
-
-
-
             // Commit the transaction
             $this->db->commit();
-            echo "Facility and Location created successfully!";
+            echo "Facility , Location and tags created successfully!";
         } catch (PDOException $e) {
             // Rollback the transaction in case of a database error
             $this->db->rollBack();
