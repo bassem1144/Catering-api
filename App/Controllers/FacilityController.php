@@ -10,7 +10,7 @@ use App\Models\Location;
 class FacilityController extends BaseController
 {
 
-    public function showAll()
+    public function readAll()
     {
         // Fetch all facilities with their locations and tags
         $query = "SELECT facilities.*, locations.*, GROUP_CONCAT(tags.tag_name SEPARATOR ', ') as tag_names
@@ -32,7 +32,12 @@ class FacilityController extends BaseController
                 echo "Name: {$facility['name']}\n";
                 echo "Creation Date: {$facility['creation_date']}\n";
                 echo "Location: {$facility['city']}, {$facility['address']}, {$facility['zip_code']}, {$facility['country_code']}\n";
-                echo "Tags: {$facility['tag_names']}\n";
+                // Check if the facility has any tags
+                if (!empty($facility['tag_names'])) {
+                    echo "Tags: {$facility['tag_names']}\n";
+                } else {
+                    echo "No tags\n";
+                }
                 echo "\n";
             }
         } else {
@@ -41,6 +46,44 @@ class FacilityController extends BaseController
         }
     }
 
+    public function read($facilityId)
+    {
+        // Fetch data for the specified facility
+        $query = "SELECT facilities.*, locations.*, GROUP_CONCAT(tags.tag_name SEPARATOR ', ') as tag_names
+                  FROM facilities
+                  LEFT JOIN locations ON facilities.location_id = locations.location_id
+                  LEFT JOIN facilitytags ON facilities.facility_id = facilitytags.facility_id
+                  LEFT JOIN tags ON facilitytags.tag_id = tags.tag_id
+                  WHERE facilities.facility_id = ?
+                  GROUP BY facilities.facility_id";
+
+        $result = $this->db->executeQuery($query, [$facilityId]);
+
+        // Check if there are any results
+        if ($result !== false) {
+            $facilityData = $result->fetch(PDO::FETCH_ASSOC);
+
+            // Display the data
+            if ($facilityData) {
+                echo "Facility ID: {$facilityData['facility_id']}\n";
+                echo "Name: {$facilityData['name']}\n";
+                echo "Creation Date: {$facilityData['creation_date']}\n";
+                echo "Location: {$facilityData['city']}, {$facilityData['address']}, {$facilityData['zip_code']}, {$facilityData['country_code']}\n";
+
+                // Check if there are tags associated with the facility
+                if (!empty($facilityData['tag_names'])) {
+                    echo "Tags: {$facilityData['tag_names']}\n";
+                } else {
+                    echo "No tags associated with this facility.\n";
+                }
+            } else {
+                echo "Facility not found.";
+            }
+        } else {
+            // Handle error
+            echo "Error fetching facility data.";
+        }
+    }
 
     public function create()
     {
