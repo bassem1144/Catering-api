@@ -250,20 +250,30 @@ class FacilityController extends BaseController
                 $facilityTagBind = [$facilityId, $tag->getId()];
                 $this->db->executeQuery($facilityTagQuery, $facilityTagBind);
             }
-            echo "Tags added successfully!\n";
+            echo "Tags updated successfully!\n";
         }
     }
 
+    public function delete($facilityId)
+    {
+        try {
+            // Delete facilitytags entries associated with the facility
+            $deleteFacilityTagsQuery = "DELETE FROM facilitytags WHERE facility_id = ?";
+            $this->db->executeQuery($deleteFacilityTagsQuery, [$facilityId]);
+
+            // Delete the facility entry
+            $deleteFacilityQuery = "DELETE FROM facilities WHERE facility_id = ?";
+            $this->db->executeQuery($deleteFacilityQuery, [$facilityId]);
 
 
-
-
-
-
-
-
-
-
-
-
+            echo "Facility and its tags deleted successfully!";
+        } catch (PDOException $e) {
+            // Rollback the transaction in case of a database error
+            $this->db->rollBack();
+            echo "Database Error: " . $e->getMessage();
+        } catch (Exception $e) {
+            // Handle other errors
+            echo "Error: " . $e->getMessage();
+        }
+    }
 }
