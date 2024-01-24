@@ -279,46 +279,65 @@ class FacilityController extends BaseController
 
     public function searchFacilities()
     {
-        // Get query parameters from the request
-        $name = $_GET['name'] ?? '';
-        $city = $_GET['city'] ?? '';
-        $tagName = $_GET['tag'] ?? '';
+        try {
+            // Get query parameters from the request
+            $name = $_GET['name'] ?? '';
+            $city = $_GET['city'] ?? '';
+            $tagName = $_GET['tag'] ?? '';
 
-        // SQL query to search for facilities
-        $query = "SELECT facilities.*, locations.city, GROUP_CONCAT(tags.tag_name) as tag_names
+            // SQL query to search for facilities
+            $query = "SELECT facilities.*, locations.city, GROUP_CONCAT(tags.tag_name) as tag_names
               FROM facilities
               JOIN locations ON facilities.location_id = locations.location_id
               LEFT JOIN facilitytags ON facilities.facility_id = facilitytags.facility_id
               LEFT JOIN tags ON facilitytags.tag_id = tags.tag_id
               WHERE 1";
 
-        // Initialize an array to store bind values
-        $bind = [];
+            // Initialize an array to store bind values
+            $bind = [];
 
-        // Add conditions to the query and bind values based on provided parameters
-        if ($name !== '') {
-            $query .= " AND facilities.name LIKE :name";
-            $bind[':name'] = "%$name%";
+            // Add conditions to the query and bind values based on provided parameters
+            if ($name !== '') {
+                $query .= " AND facilities.name LIKE :name";
+                $bind[':name'] = "%$name%";
+            }
+
+            if ($city !== '') {
+                $query .= " AND locations.city LIKE :city";
+                $bind[':city'] = "%$city%";
+            }
+
+            if ($tagName !== '') {
+                $query .= " AND tags.tag_name LIKE :tagName";
+                $bind[':tagName'] = "%$tagName%";
+            }
+
+            // Complete the query
+            $query .= " GROUP BY facilities.facility_id";
+
+            // Execute the query
+            $result = $this->db->executeQuery($query, $bind)->fetchAll(PDO::FETCH_ASSOC);
+
+            // Check if there are any results
+            if ($result) {
+                // Return the data as JSON with a 200 OK status code
+                header('Content-Type: application/json');
+                echo json_encode($result);
+            } else {
+                // Return a 404 Not Found status code if no results are found
+                http_response_code(404);
+                echo json_encode(['error' => 'No facilities found']);
+            }
+        } catch (PDOException $e) {
+            // Handle database errors and return a 500 Internal Server Error status code
+            http_response_code(500);
+            echo json_encode(['error' => 'Database Error: ' . $e->getMessage()]);
+        } catch (Exception $e) {
+            // Handle other errors and return a 500 Internal Server Error status code
+            http_response_code(500);
+            echo json_encode(['error' => 'Error: ' . $e->getMessage()]);
         }
-
-        if ($city !== '') {
-            $query .= " AND locations.city LIKE :city";
-            $bind[':city'] = "%$city%";
-        }
-
-        if ($tagName !== '') {
-            $query .= " AND tags.tag_name LIKE :tagName";
-            $bind[':tagName'] = "%$tagName%";
-        }
-
-        // Complete the query
-        $query .= " GROUP BY facilities.facility_id";
-
-        // Execute the query
-        $result = $this->db->executeQuery($query, $bind)->fetchAll(PDO::FETCH_ASSOC);
-
-        // Return the data as JSON 
-        echo json_encode($result);
     }
+
 
 }

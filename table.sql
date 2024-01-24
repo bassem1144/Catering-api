@@ -41,7 +41,7 @@ CREATE TABLE FacilityTags (
     CONSTRAINT fk_tag FOREIGN KEY (tag_id) REFERENCES Tags(tag_id)
 );
 
--- Insert more dummy data into Locations table
+-- Insert dummy data into Locations table
 INSERT INTO Locations (city, address, zip_code, country_code, phone_number)
 VALUES
     ('Amsterdam', 'Street 1', '12345', '31', '1234567890'),
@@ -55,10 +55,10 @@ VALUES
     ('Breda', 'Street 9', '23456', '31', '7890123456'),
     ('Leeuwarden', 'Street 10', '67890', '31', '8901234567');
 
--- Insert more dummy data into Tags table
+-- Insert dummy data into Tags table
 INSERT INTO Tags (tag_name) VALUES ('Tag1'), ('Tag2'), ('Tag3'), ('Tag4'), ('Tag5');
 
--- Insert more dummy data into Facilities table
+-- Insert dummy data into Facilities table
 INSERT INTO Facilities (name, creation_date, location_id)
 VALUES
     ('Facility 1', '2022-01-01', 1),
@@ -72,7 +72,7 @@ VALUES
     ('Facility 9', '2022-01-09', 9),
     ('Facility 10', '2022-01-10', 10);
 
--- Insert more dummy data into FacilityTags table
+-- Insert dummy data into FacilityTags table
 INSERT INTO FacilityTags (facility_id, tag_id)
 VALUES
     (1, 1),
