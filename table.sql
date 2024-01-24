@@ -44,16 +44,16 @@ CREATE TABLE FacilityTags (
 -- Insert dummy data into Locations table
 INSERT INTO Locations (city, address, zip_code, country_code, phone_number)
 VALUES
-    ('Amsterdam', 'Street 1', '12345', '31', '1234567890'),
-    ('Utrecht', 'Street 2', '54321', '31', '4567890123'),
-    ('Rotterdam', 'Street 3', '98765', '31', '7890123456'),
-    ('Groningen', 'Street 4', '23456', '31', '2345678901'),
-    ('Maastricht', 'Street 5', '67890', '31', '3456789012'),
-    ('Eindhoven', 'Street 6', '12345', '31', '4567890123'),
-    ('Haarlem', 'Street 7', '54321', '31', '5678901234'),
-    ('Amersfoort', 'Street 8', '98765', '31', '6789012345'),
-    ('Breda', 'Street 9', '23456', '31', '7890123456'),
-    ('Leeuwarden', 'Street 10', '67890', '31', '8901234567');
+    ('Amsterdam', 'Street 1', '1234HE', '31', '1234567890'),
+    ('Utrecht', 'Street 2', '5432WC', '31', '4567890123'),
+    ('Rotterdam', 'Street 3', '9876AB', '31', '7890123456'),
+    ('Groningen', 'Street 4', '2345PO', '31', '2345678901'),
+    ('Maastricht', 'Street 5', '6789BA', '31', '3456789012'),
+    ('Eindhoven', 'Street 6', '1234AH', '31', '4567890123'),
+    ('Haarlem', 'Street 7', '5432AB', '31', '5678901234'),
+    ('Amersfoort', 'Street 8', '9876BT', '31', '6789012345'),
+    ('Breda', 'Street 9', '2345MT', '31', '7890123456'),
+    ('Leeuwarden', 'Street 10', '6789HA', '31', '8901234567');
 
 -- Insert dummy data into Tags table
 INSERT INTO Tags (tag_name) VALUES ('Tag1'), ('Tag2'), ('Tag3'), ('Tag4'), ('Tag5');
