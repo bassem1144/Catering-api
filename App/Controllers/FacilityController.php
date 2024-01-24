@@ -276,4 +276,49 @@ class FacilityController extends BaseController
             echo "Error: " . $e->getMessage();
         }
     }
+
+    public function searchFacilities()
+    {
+        // Get query parameters from the request
+        $name = $_GET['name'] ?? '';
+        $city = $_GET['city'] ?? '';
+        $tagName = $_GET['tag'] ?? '';
+
+        // SQL query to search for facilities
+        $query = "SELECT facilities.*, locations.city, GROUP_CONCAT(tags.tag_name) as tag_names
+              FROM facilities
+              JOIN locations ON facilities.location_id = locations.location_id
+              LEFT JOIN facilitytags ON facilities.facility_id = facilitytags.facility_id
+              LEFT JOIN tags ON facilitytags.tag_id = tags.tag_id
+              WHERE 1";
+
+        // Initialize an array to store bind values
+        $bind = [];
+
+        // Add conditions to the query and bind values based on provided parameters
+        if ($name !== '') {
+            $query .= " AND facilities.name LIKE :name";
+            $bind[':name'] = "%$name%";
+        }
+
+        if ($city !== '') {
+            $query .= " AND locations.city LIKE :city";
+            $bind[':city'] = "%$city%";
+        }
+
+        if ($tagName !== '') {
+            $query .= " AND tags.tag_name LIKE :tagName";
+            $bind[':tagName'] = "%$tagName%";
+        }
+
+        // Complete the query
+        $query .= " GROUP BY facilities.facility_id";
+
+        // Execute the query
+        $result = $this->db->executeQuery($query, $bind)->fetchAll(PDO::FETCH_ASSOC);
+
+        // Return the data as JSON 
+        echo json_encode($result);
+    }
+
 }
