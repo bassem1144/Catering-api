@@ -10,33 +10,20 @@ use App\Models\Location;
 class FacilityController extends BaseController
 {
 
+
     public function readAll()
     {
         try {
-            // Fetch all facilities with their locations and tags
-            $query = "SELECT facilities.*, locations.*, GROUP_CONCAT(tags.tag_name SEPARATOR ', ') as tag_names
-                  FROM facilities
-                  LEFT JOIN locations ON facilities.location_id = locations.location_id
-                  LEFT JOIN facility_tags ON facilities.facility_id = facility_tags.facility_id
-                  LEFT JOIN tags ON facility_tags.tag_id = tags.tag_id
-                  GROUP BY facilities.facility_id";
+            // Create a new Facility model
+            $facilityModel =   new Facility();
 
-            $result = $this->db->executeQuery($query);
+            // Get facilities from the model
+            $facilities = $facilityModel->getAllFacilities();
 
-            // Check if there are any results
-            if ($result !== false) {
-                $facilities = $result->fetchAll(PDO::FETCH_ASSOC);
-
-                // Return the data as JSON with a 200 OK status code
-                header('Content-Type: application/json');
-                http_response_code(200);
-                echo json_encode($facilities);
-            } else {
-                // Handle error when no facility is found
-                header('Content-Type: application/json');
-                http_response_code(404);
-                echo json_encode(['error' => 'No facilities found.']);
-            }
+            // Return the data as JSON with a 200 OK status code
+            header('Content-Type: application/json');
+            http_response_code(200);
+            echo json_encode($facilities);
         } catch (PDOException $e) {
             // Handle database errors
             header('Content-Type: application/json');
@@ -49,6 +36,10 @@ class FacilityController extends BaseController
             echo json_encode(['error' => 'Error: ' . $e->getMessage()]);
         }
     }
+
+
+
+
 
     public function read($facilityId)
     {

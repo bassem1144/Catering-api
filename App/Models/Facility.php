@@ -2,15 +2,45 @@
 
 namespace App\Models;
 
+use App\Plugins\Di\Injectable;
 use App\Models\Tag;
+use PDO;
 
-class Facility
+class Facility extends Injectable
 {
     private $id;
     private $name;
-    private $creationDate;
     private $location;
     private $tags = [];
+
+
+    public function getAllFacilities()
+    {
+        try {
+            // Fetch all facilities with their locations and tags
+            $query = "SELECT facilities.*, locations.*, GROUP_CONCAT(tags.tag_name SEPARATOR ', ') as tag_names
+                  FROM facilities
+                  LEFT JOIN locations ON facilities.location_id = locations.location_id
+                  LEFT JOIN facility_tags ON facilities.facility_id = facility_tags.facility_id
+                  LEFT JOIN tags ON facility_tags.tag_id = tags.tag_id
+                  GROUP BY facilities.facility_id";
+
+            $result = $this->db->executeQuery($query);
+
+            // Check if there are any results
+            if ($result) {
+                return $result->fetchAll(PDO::FETCH_ASSOC);
+            } else {
+                return [];
+            }
+        } catch (PDOException $e) {
+            // Log or handle the database error
+            throw new Exception('Database Error: ' . $e->getMessage());
+        } catch (Exception $e) {
+            // Log or handle other errors
+            throw new Exception('Error: ' . $e->getMessage());
+        }
+    }
 
     public function setName(string $name): Facility
     {
