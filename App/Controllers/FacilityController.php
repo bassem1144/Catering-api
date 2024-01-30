@@ -10,6 +10,17 @@ use App\Models\Location;
 class FacilityController extends BaseController
 {
 
+    private $facilityModel;
+    private $locationModel;
+    private $tagModel;
+
+    public function __construct()
+    {
+        $this->facilityModel = new Facility();
+        $this->locationModel = new Location();
+        $this->tagModel = new Tag();
+    }
+
 
     public function readAll()
     {

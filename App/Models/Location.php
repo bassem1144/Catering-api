@@ -2,13 +2,24 @@
 
 namespace App\Models;
 
-class Location
+use App\Plugins\Di\Injectable;
+
+class Location extends Injectable
 {
     private $city;
     private $address;
     private $zipCode;
     private $countryCode;
     private $phoneNumber;
+
+    public function insertLocation(Location $location)
+    {
+        $query = "INSERT INTO locations (city, address, zip_code, country_code, phone_number) VALUES (?, ?, ?, ?, ?)";
+        $bind = [$location->getCity(), $location->getAddress(), $location->getZipCode(), $location->getCountryCode(), $location->getPhoneNumber()];
+        $this->db->executeQuery($query, $bind);
+
+        return $this->db->getLastInsertedId();
+    }
 
     public function setCity(string $city): Location
     {
