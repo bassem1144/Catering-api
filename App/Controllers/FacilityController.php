@@ -17,8 +17,8 @@ class FacilityController extends BaseController
             $query = "SELECT facilities.*, locations.*, GROUP_CONCAT(tags.tag_name SEPARATOR ', ') as tag_names
                   FROM facilities
                   LEFT JOIN locations ON facilities.location_id = locations.location_id
-                  LEFT JOIN facilitytags ON facilities.facility_id = facilitytags.facility_id
-                  LEFT JOIN tags ON facilitytags.tag_id = tags.tag_id
+                  LEFT JOIN facility_tags ON facilities.facility_id = facility_tags.facility_id
+                  LEFT JOIN tags ON facility_tags.tag_id = tags.tag_id
                   GROUP BY facilities.facility_id";
 
             $result = $this->db->executeQuery($query);
@@ -57,8 +57,8 @@ class FacilityController extends BaseController
             $query = "SELECT facilities.*, locations.*, GROUP_CONCAT(tags.tag_name SEPARATOR ', ') as tag_names
                   FROM facilities
                   LEFT JOIN locations ON facilities.location_id = locations.location_id
-                  LEFT JOIN facilitytags ON facilities.facility_id = facilitytags.facility_id
-                  LEFT JOIN tags ON facilitytags.tag_id = tags.tag_id
+                  LEFT JOIN facility_tags ON facilities.facility_id = facility_tags.facility_id
+                  LEFT JOIN tags ON facility_tags.tag_id = tags.tag_id
                   WHERE facilities.facility_id = ?
                   GROUP BY facilities.facility_id";
 
@@ -172,8 +172,8 @@ class FacilityController extends BaseController
                     // Associate the tag with the facility
                     $facility->addTag($tag);
 
-                    // Insert the association into the FacilityTags table
-                    $facilityTagQuery = "INSERT INTO facilitytags (facility_id, tag_id) VALUES (?, ?)";
+                    // Insert the association into the Facility_Tags table
+                    $facilityTagQuery = "INSERT INTO facility_tags (facility_id, tag_id) VALUES (?, ?)";
                     $facilityTagBind = [$facilityId, $tag->getId()];
                     $this->db->executeQuery($facilityTagQuery, $facilityTagBind);
                 }
@@ -231,7 +231,7 @@ class FacilityController extends BaseController
                 $tagsArray = explode(",", $formData['tags']);
 
                 // Delete existing tags for the facility
-                $deleteTagsQuery = "DELETE FROM facilitytags WHERE facility_id = ?";
+                $deleteTagsQuery = "DELETE FROM facility_tags WHERE facility_id = ?";
                 $this->db->executeQuery($deleteTagsQuery, [$facilityId]);
 
                 foreach ($tagsArray as $tagName) {
@@ -259,8 +259,8 @@ class FacilityController extends BaseController
                         $tag->setId($this->db->getLastInsertedId());
                     }
 
-                    // Insert the association into the FacilityTags table
-                    $facilityTagQuery = "INSERT INTO facilitytags (facility_id, tag_id) VALUES (?, ?)";
+                    // Insert the association into the Facility_Tags table
+                    $facilityTagQuery = "INSERT INTO facility_tags (facility_id, tag_id) VALUES (?, ?)";
                     $facilityTagBind = [$facilityId, $tag->getId()];
                     $this->db->executeQuery($facilityTagQuery, $facilityTagBind);
                 }
@@ -286,9 +286,9 @@ class FacilityController extends BaseController
     public function delete($facilityId)
     {
         try {
-            // Delete facilitytags entries associated with the facility
-            $deleteFacilityTagsQuery = "DELETE FROM facilitytags WHERE facility_id = ?";
-            $this->db->executeQuery($deleteFacilityTagsQuery, [$facilityId]);
+            // Delete facility_tags entries associated with the facility
+            $deleteFacility_TagsQuery = "DELETE FROM facility_tags WHERE facility_id = ?";
+            $this->db->executeQuery($deleteFacility_TagsQuery, [$facilityId]);
 
             // Delete the facility entry
             $deleteFacilityQuery = "DELETE FROM facilities WHERE facility_id = ?";
@@ -323,8 +323,8 @@ class FacilityController extends BaseController
             $query = "SELECT facilities.*, locations.city, GROUP_CONCAT(tags.tag_name) as tag_names
               FROM facilities
               JOIN locations ON facilities.location_id = locations.location_id
-              LEFT JOIN facilitytags ON facilities.facility_id = facilitytags.facility_id
-              LEFT JOIN tags ON facilitytags.tag_id = tags.tag_id
+              LEFT JOIN facility_tags ON facilities.facility_id = facility_tags.facility_id
+              LEFT JOIN tags ON facility_tags.tag_id = tags.tag_id
               WHERE 1";
 
             // Initialize an array to store bind values

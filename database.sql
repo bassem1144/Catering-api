@@ -32,8 +32,8 @@ CREATE TABLE Facilities (
     CONSTRAINT fk_location FOREIGN KEY (location_id) REFERENCES Locations(location_id)
 );
 
--- Create FacilityTags junction table for many-to-many relationship
-CREATE TABLE FacilityTags (
+-- Create Facility_tags junction table for many-to-many relationship
+CREATE TABLE Facility_tags (
     facility_id INT,
     tag_id INT,
     PRIMARY KEY (facility_id, tag_id),
@@ -72,8 +72,8 @@ VALUES
     ('Facility 9', '2022-01-09', 9),
     ('Facility 10', '2022-01-10', 10);
 
--- Insert dummy data into FacilityTags table
-INSERT INTO FacilityTags (facility_id, tag_id)
+-- Insert dummy data into Facility_tags table
+INSERT INTO Facility_tags (facility_id, tag_id)
 VALUES
     (1, 1),
     (1, 2),
