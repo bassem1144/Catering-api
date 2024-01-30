@@ -25,11 +25,8 @@ class FacilityController extends BaseController
     public function readAll()
     {
         try {
-            // Create a new Facility model
-            $facilityModel =   new Facility();
-
             // Get facilities from the model
-            $facilities = $facilityModel->getAllFacilities();
+            $facilities = $this->facilityModel->getAllFacilities();
 
             // Return the data as JSON with a 200 OK status code
             header('Content-Type: application/json');
@@ -48,44 +45,22 @@ class FacilityController extends BaseController
         }
     }
 
-
-
-
-
     public function read($facilityId)
     {
         try {
-            // Fetch data for the specified facility
-            $query = "SELECT facilities.*, locations.*, GROUP_CONCAT(tags.tag_name SEPARATOR ', ') as tag_names
-                  FROM facilities
-                  LEFT JOIN locations ON facilities.location_id = locations.location_id
-                  LEFT JOIN facility_tags ON facilities.facility_id = facility_tags.facility_id
-                  LEFT JOIN tags ON facility_tags.tag_id = tags.tag_id
-                  WHERE facilities.facility_id = ?
-                  GROUP BY facilities.facility_id";
+            // Get facility data from the model
+            $facilityData = $this->facilityModel->getFacilityById($facilityId);
 
-            $result = $this->db->executeQuery($query, [$facilityId]);
-
-            // Check if there are any results
-            if ($result !== false) {
-                $facilityData = $result->fetch(PDO::FETCH_ASSOC);
-
-                // Return the data as JSON with a 200 OK status code
-                if ($facilityData) {
-                    header('Content-Type: application/json');
-                    http_response_code(200);
-                    echo json_encode($facilityData);
-                } else {
-                    // Handle error when no facility is found
-                    header('Content-Type: application/json');
-                    http_response_code(404);
-                    echo json_encode(['error' => 'Facility not found.']);
-                }
-            } else {
-                // Handle error
+            // Return the data as JSON with a 200 OK status code
+            if ($facilityData) {
                 header('Content-Type: application/json');
-                http_response_code(500);
-                echo json_encode(['error' => 'Error fetching facility data.']);
+                http_response_code(200);
+                echo json_encode($facilityData);
+            } else {
+                // Handle error when no facility is found
+                header('Content-Type: application/json');
+                http_response_code(404);
+                echo json_encode(['error' => 'Facility not found.']);
             }
         } catch (PDOException $e) {
             // Handle database errors
@@ -121,64 +96,8 @@ class FacilityController extends BaseController
             // Begin a transaction
             $this->db->beginTransaction();
 
-            // Insert the location into the database
-            $locationQuery = "INSERT INTO locations (city, address, zip_code, country_code, phone_number) VALUES (?, ?, ?, ?, ?)";
-            $locationBind = [$location->getCity(), $location->getAddress(), $location->getZipCode(), $location->getCountryCode(), $location->getPhoneNumber()];
-            $this->db->executeQuery($locationQuery, $locationBind);
-
-            // Get the location ID from the last inserted row
-            $locationId = $this->db->getLastInsertedId();
-
-            // Insert the facility into the database with the associated location ID
-            $facilityQuery = "INSERT INTO facilities (name, location_id) VALUES (?, ?)";
-            $facilityBind = [$facility->getName(), $locationId];
-            $this->db->executeQuery($facilityQuery, $facilityBind);
-
-            // Get the facility ID from the last inserted row
-            $facilityId = $this->db->getLastInsertedId();
-
-            // Handle tags
-            if (isset($_POST['tags'])) {
-                $tagsArray = explode(",", $_POST['tags']);
-            } else {
-                $tagsArray = null;
-            }
-
-            if (isset($tagsArray) && is_array($tagsArray)) {
-                foreach ($tagsArray as $tagName) {
-                    // Check if the tag already exists
-                    $tagQuery = "SELECT tag_id FROM tags WHERE tag_name = ?";
-                    $tagBind = [$tagName];
-
-                    $existingTagId = $this->db->executeQuery($tagQuery, $tagBind)->fetchColumn();
-
-                    if ($existingTagId) {
-                        // If tag exists, use the existing tag
-                        $tag = new Tag;
-                        $tag->setId($existingTagId);
-                    } else {
-                        // If tag doesn't exist, create a new tag
-                        $tag = new Tag;
-                        $tag->setName($tagName);
-
-                        // Insert the tag into the database
-                        $tagQuery = "INSERT INTO tags (tag_name) VALUES (?)";
-                        $tagBind = [$tag->getName()];
-                        $this->db->executeQuery($tagQuery, $tagBind);
-
-                        // Get the tag ID from the last inserted row
-                        $tag->setId($this->db->getLastInsertedId());
-                    }
-
-                    // Associate the tag with the facility
-                    $facility->addTag($tag);
-
-                    // Insert the association into the Facility_Tags table
-                    $facilityTagQuery = "INSERT INTO facility_tags (facility_id, tag_id) VALUES (?, ?)";
-                    $facilityTagBind = [$facilityId, $tag->getId()];
-                    $this->db->executeQuery($facilityTagQuery, $facilityTagBind);
-                }
-            }
+            // Call the model methods to handle database insertion
+            $facilityId = $this->facilityModel->createFacility($facility, $location, $_POST['tags'], $this->tagModel);
 
             // Commit the transaction
             $this->db->commit();
@@ -210,72 +129,19 @@ class FacilityController extends BaseController
             $putData = file_get_contents('php://input');
             parse_str($putData, $formData);
 
-            // Define update queries and fields
-            $updateQueries = [
-                'name' => "UPDATE facilities SET name = ? WHERE facility_id = ?",
-                'city' => "UPDATE locations SET city = ? WHERE location_id = ?",
-                'address' => "UPDATE locations SET address = ? WHERE location_id = ?",
-                'zip_code' => "UPDATE locations SET zip_code = ? WHERE location_id = ?",
-                'country_code' => "UPDATE locations SET country_code = ? WHERE location_id = ?",
-                'phone_number' => "UPDATE locations SET phone_number = ? WHERE location_id = ?",
-            ];
+            // Call the model method to handle database update
+            $result = $this->facilityModel->updateFacility($facilityId, $formData);
 
-            // loop through the fields and execute the update queries
-            foreach ($updateQueries as $field => $query) {
-                if (isset($formData[$field])) {
-                    $this->db->executeQuery($query, [$formData[$field], $facilityId]);
-                }
+            // Return the result as JSON with the appropriate HTTP status code
+            header('Content-Type: application/json');
+
+            if (isset($result['error'])) {
+                http_response_code(500);
+            } else {
+                http_response_code(200);
             }
 
-            // Handle tags
-            if (isset($formData['tags'])) {
-                $tagsArray = explode(",", $formData['tags']);
-
-                // Delete existing tags for the facility
-                $deleteTagsQuery = "DELETE FROM facility_tags WHERE facility_id = ?";
-                $this->db->executeQuery($deleteTagsQuery, [$facilityId]);
-
-                foreach ($tagsArray as $tagName) {
-                    // Check if the tag already exists
-                    $tagQuery = "SELECT tag_id FROM tags WHERE tag_name = ?";
-                    $tagBind = [$tagName];
-
-                    $existingTagId = $this->db->executeQuery($tagQuery, $tagBind)->fetchColumn();
-
-                    if ($existingTagId) {
-                        // If tag exists, use the existing tag
-                        $tag = new Tag;
-                        $tag->setId($existingTagId);
-                    } else {
-                        // If tag doesn't exist, create a new tag
-                        $tag = new Tag;
-                        $tag->setName($tagName);
-
-                        // Insert the tag into the database
-                        $tagQuery = "INSERT INTO tags (tag_name) VALUES (?)";
-                        $tagBind = [$tag->getName()];
-                        $this->db->executeQuery($tagQuery, $tagBind);
-
-                        // Get the tag ID from the last inserted row
-                        $tag->setId($this->db->getLastInsertedId());
-                    }
-
-                    // Insert the association into the Facility_Tags table
-                    $facilityTagQuery = "INSERT INTO facility_tags (facility_id, tag_id) VALUES (?, ?)";
-                    $facilityTagBind = [$facilityId, $tag->getId()];
-                    $this->db->executeQuery($facilityTagQuery, $facilityTagBind);
-                }
-            }
-
-            // Return a success message with a 200 OK status code
-            header('Content-Type: application/json');
-            http_response_code(200);
-            echo json_encode(['message' => 'Facility updated successfully!']);
-        } catch (PDOException $e) {
-            // Handle database errors 
-            header('Content-Type: application/json');
-            http_response_code(500);
-            echo json_encode(['error' => 'Database Error: ' . $e->getMessage()]);
+            echo json_encode($result);
         } catch (Exception $e) {
             // Handle other errors
             header('Content-Type: application/json');
@@ -287,23 +153,19 @@ class FacilityController extends BaseController
     public function delete($facilityId)
     {
         try {
-            // Delete facility_tags entries associated with the facility
-            $deleteFacility_TagsQuery = "DELETE FROM facility_tags WHERE facility_id = ?";
-            $this->db->executeQuery($deleteFacility_TagsQuery, [$facilityId]);
+            // Call the model method to handle database deletion
+            $result = $this->facilityModel->deleteFacility($facilityId);
 
-            // Delete the facility entry
-            $deleteFacilityQuery = "DELETE FROM facilities WHERE facility_id = ?";
-            $this->db->executeQuery($deleteFacilityQuery, [$facilityId]);
+            // Return the result as JSON with the appropriate HTTP status code
+            header('Content-Type: application/json');
 
-            // Return a success message with a 200 OK status code
-            header('Content-Type: application/json');
-            http_response_code(200);
-            echo json_encode(['message' => 'Facility and its tags deleted successfully!']);
-        } catch (PDOException $e) {
-            // Handle database errors 
-            header('Content-Type: application/json');
-            http_response_code(500);
-            echo json_encode(['error' => 'Database Error: ' . $e->getMessage()]);
+            if (isset($result['error'])) {
+                http_response_code(500);
+            } else {
+                http_response_code(200);
+            }
+
+            echo json_encode($result);
         } catch (Exception $e) {
             // Handle other errors
             header('Content-Type: application/json');
@@ -320,56 +182,21 @@ class FacilityController extends BaseController
             $city = $_GET['city'] ?? '';
             $tagName = $_GET['tag'] ?? '';
 
-            // SQL query to search for facilities
-            $query = "SELECT facilities.*, locations.city, GROUP_CONCAT(tags.tag_name) as tag_names
-              FROM facilities
-              JOIN locations ON facilities.location_id = locations.location_id
-              LEFT JOIN facility_tags ON facilities.facility_id = facility_tags.facility_id
-              LEFT JOIN tags ON facility_tags.tag_id = tags.tag_id
-              WHERE 1";
+            // Call the model method to handle database search
+            $result = $this->facilityModel->searchFacilities($name, $city, $tagName);
 
-            // Initialize an array to store bind values
-            $bind = [];
+            // Return the result as JSON with the appropriate HTTP status code
+            header('Content-Type: application/json');
 
-            // Add conditions to the query and bind values based on provided parameters
-            if ($name !== '') {
-                $query .= " AND facilities.name LIKE :name";
-                $bind[':name'] = "%$name%";
-            }
-
-            if ($city !== '') {
-                $query .= " AND locations.city LIKE :city";
-                $bind[':city'] = "%$city%";
-            }
-
-            if ($tagName !== '') {
-                $query .= " AND tags.tag_name LIKE :tagName";
-                $bind[':tagName'] = "%$tagName%";
-            }
-
-            // Complete the query
-            $query .= " GROUP BY facilities.facility_id";
-
-            // Execute the query
-            $result = $this->db->executeQuery($query, $bind)->fetchAll(PDO::FETCH_ASSOC);
-
-            // Check if there are any results
             if ($result) {
-                // Return the data as JSON with a 200 OK status code
-                header('Content-Type: application/json');
+                // Return the result as JSON with a 200 OK status code
                 http_response_code(200);
                 echo json_encode($result);
             } else {
-                // Handle error when no facility is found
-                header('Content-Type: application/json');
+                // Handle error when no facilities are found
                 http_response_code(404);
                 echo json_encode(['error' => 'No facilities found']);
             }
-        } catch (PDOException $e) {
-            // Handle database errors 
-            header('Content-Type: application/json');
-            http_response_code(500);
-            echo json_encode(['error' => 'Database Error: ' . $e->getMessage()]);
         } catch (Exception $e) {
             // Handle other errors
             header('Content-Type: application/json');
