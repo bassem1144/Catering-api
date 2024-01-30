@@ -42,6 +42,268 @@ class Facility extends Injectable
         }
     }
 
+
+    public function getFacilityById($facilityId)
+    {
+        try {
+            // Fetch data for the specified facility
+            $query = "SELECT facilities.*, locations.*, GROUP_CONCAT(tags.tag_name SEPARATOR ', ') as tag_names
+                      FROM facilities
+                      LEFT JOIN locations ON facilities.location_id = locations.location_id
+                      LEFT JOIN facility_tags ON facilities.facility_id = facility_tags.facility_id
+                      LEFT JOIN tags ON facility_tags.tag_id = tags.tag_id
+                      WHERE facilities.facility_id = ?
+                      GROUP BY facilities.facility_id";
+
+            $result = $this->db->executeQuery($query, [$facilityId]);
+
+            // Check if there are any results
+            if ($result !== false) {
+                return $result->fetch(PDO::FETCH_ASSOC);
+            } else {
+                return null;
+            }
+        } catch (PDOException $e) {
+            // Log or handle the database error
+            throw new Exception('Database Error: ' . $e->getMessage());
+        } catch (Exception $e) {
+            // Log or handle other errors
+            throw new Exception('Error: ' . $e->getMessage());
+        }
+    }
+
+    public function createFacility(Facility $facility, Location $location, $tags)
+    {
+        // Insert the location into the database
+        $locationId = $this->insertLocation($location);
+
+        // Insert the facility into the database with the associated location ID
+        $facilityId = $this->insertFacility($facility, $locationId);
+
+        // Handle tags
+        $this->handleTags($facilityId, $tags);
+
+        return $facilityId;
+    }
+
+    private function insertLocation(Location $location)
+    {
+        $query = "INSERT INTO locations (city, address, zip_code, country_code, phone_number) VALUES (?, ?, ?, ?, ?)";
+        $bind = [$location->getCity(), $location->getAddress(), $location->getZipCode(), $location->getCountryCode(), $location->getPhoneNumber()];
+        $this->db->executeQuery($query, $bind);
+
+        return $this->db->getLastInsertedId();
+    }
+
+    private function insertFacility(Facility $facility, $locationId)
+    {
+        $query = "INSERT INTO facilities (name, location_id) VALUES (?, ?)";
+        $bind = [$facility->getName(), $locationId];
+        $this->db->executeQuery($query, $bind);
+
+        return $this->db->getLastInsertedId();
+    }
+
+    private function handleTags($facilityId, $tags)
+    {
+        if (isset($tags)) {
+            $tagsArray = explode(",", $tags);
+
+            foreach ($tagsArray as $tagName) {
+                // Check if the tag already exists
+                $tagId = $this->getTagIdByName($tagName);
+
+                if (!$tagId) {
+                    // If tag doesn't exist, create a new tag
+                    $tagId = $this->insertTag($tagName);
+                }
+
+                // Insert the association into the Facility_Tags table
+                $this->insertFacilityTag($facilityId, $tagId);
+            }
+        }
+    }
+
+    private function getTagIdByName($tagName)
+    {
+        $query = "SELECT tag_id FROM tags WHERE tag_name = ?";
+        $bind = [$tagName];
+        return $this->db->executeQuery($query, $bind)->fetchColumn();
+    }
+
+    private function insertTag($tagName)
+    {
+        $query = "INSERT INTO tags (tag_name) VALUES (?)";
+        $bind = [$tagName];
+        $this->db->executeQuery($query, $bind);
+
+        return $this->db->getLastInsertedId();
+    }
+
+    private function insertFacilityTag($facilityId, $tagId)
+    {
+        $query = "INSERT INTO facility_tags (facility_id, tag_id) VALUES (?, ?)";
+        $bind = [$facilityId, $tagId];
+        $this->db->executeQuery($query, $bind);
+    }
+
+    public function updateFacility($facilityId, $formData)
+    {
+        try {
+            // Define update queries and fields
+            $updateQueries = [
+                'name' => "UPDATE facilities SET name = ? WHERE facility_id = ?",
+                'city' => "UPDATE locations SET city = ? WHERE location_id = ?",
+                'address' => "UPDATE locations SET address = ? WHERE location_id = ?",
+                'zip_code' => "UPDATE locations SET zip_code = ? WHERE location_id = ?",
+                'country_code' => "UPDATE locations SET country_code = ? WHERE location_id = ?",
+                'phone_number' => "UPDATE locations SET phone_number = ? WHERE location_id = ?",
+            ];
+
+            // loop through the fields and execute the update queries
+            foreach ($updateQueries as $field => $query) {
+                if (isset($formData[$field])) {
+                    $this->db->executeQuery($query, [$formData[$field], $facilityId]);
+                }
+            }
+
+            // Handle tags
+            if (isset($formData['tags'])) {
+                $tagsArray = explode(",", $formData['tags']);
+
+                // Delete existing tags for the facility
+                $deleteTagsQuery = "DELETE FROM facility_tags WHERE facility_id = ?";
+                $this->db->executeQuery($deleteTagsQuery, [$facilityId]);
+
+                foreach ($tagsArray as $tagName) {
+                    // Check if the tag already exists
+                    $tagQuery = "SELECT tag_id FROM tags WHERE tag_name = ?";
+                    $tagBind = [$tagName];
+
+                    $existingTagId = $this->db->executeQuery($tagQuery, $tagBind)->fetchColumn();
+
+                    if ($existingTagId) {
+                        // If tag exists, use the existing tag
+                        $tag = new Tag;
+                        $tag->setId($existingTagId);
+                    } else {
+                        // If tag doesn't exist, create a new tag
+                        $tag = new Tag;
+                        $tag->setName($tagName);
+
+                        // Insert the tag into the database
+                        $tagQuery = "INSERT INTO tags (tag_name) VALUES (?)";
+                        $tagBind = [$tag->getName()];
+                        $this->db->executeQuery($tagQuery, $tagBind);
+
+                        // Get the tag ID from the last inserted row
+                        $tag->setId($this->db->getLastInsertedId());
+                    }
+
+                    // Insert the association into the Facility_Tags table
+                    $facilityTagQuery = "INSERT INTO facility_tags (facility_id, tag_id) VALUES (?, ?)";
+                    $facilityTagBind = [$facilityId, $tag->getId()];
+                    $this->db->executeQuery($facilityTagQuery, $facilityTagBind);
+                }
+            }
+
+            // Return a success message
+            return ['message' => 'Facility updated successfully!'];
+        } catch (PDOException $e) {
+            // Handle database errors 
+            throw new Exception('Database Error: ' . $e->getMessage());
+        } catch (Exception $e) {
+            // Handle other errors
+            throw new Exception('Error: ' . $e->getMessage());
+        }
+    }
+
+    public function deleteFacility($facilityId)
+    {
+        try {
+            // Delete facility_tags entries associated with the facility
+            $deleteFacility_TagsQuery = "DELETE FROM facility_tags WHERE facility_id = ?";
+            $this->db->executeQuery($deleteFacility_TagsQuery, [$facilityId]);
+
+            // Delete the facility entry
+            $deleteFacilityQuery = "DELETE FROM facilities WHERE facility_id = ?";
+            $this->db->executeQuery($deleteFacilityQuery, [$facilityId]);
+
+            // Return a success message
+            return ['message' => 'Facility and its tags deleted successfully!'];
+        } catch (PDOException $e) {
+            // Handle database errors 
+            throw new Exception('Database Error: ' . $e->getMessage());
+        } catch (Exception $e) {
+            // Handle other errors
+            throw new Exception('Error: ' . $e->getMessage());
+        }
+    }
+
+
+    public function searchFacilities($name, $city, $tagName)
+    {
+        try {
+            // SQL query to search for facilities
+            $query = "SELECT facilities.*, locations.city, GROUP_CONCAT(tags.tag_name) as tag_names
+                      FROM facilities
+                      JOIN locations ON facilities.location_id = locations.location_id
+                      LEFT JOIN facility_tags ON facilities.facility_id = facility_tags.facility_id
+                      LEFT JOIN tags ON facility_tags.tag_id = tags.tag_id
+                      WHERE 1";
+
+            // Initialize an array to store bind values
+            $bind = [];
+
+            // Add conditions to the query and bind values based on provided parameters
+            if ($name !== '') {
+                $query .= " AND facilities.name LIKE :name";
+                $bind[':name'] = "%$name%";
+            }
+
+            if ($city !== '') {
+                $query .= " AND locations.city LIKE :city";
+                $bind[':city'] = "%$city%";
+            }
+
+            if ($tagName !== '') {
+                $query .= " AND tags.tag_name LIKE :tagName";
+                $bind[':tagName'] = "%$tagName%";
+            }
+
+            // Complete the query
+            $query .= " GROUP BY facilities.facility_id";
+
+            // Execute the query
+            $result = $this->db->executeQuery($query, $bind)->fetchAll(PDO::FETCH_ASSOC);
+
+            return $result;
+        } catch (PDOException $e) {
+            // Handle database errors 
+            throw new Exception('Database Error: ' . $e->getMessage());
+        } catch (Exception $e) {
+            // Handle other errors
+            throw new Exception('Error: ' . $e->getMessage());
+        }
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     public function setName(string $name): Facility
     {
         $this->name = $name;
