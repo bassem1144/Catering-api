@@ -21,7 +21,6 @@ class FacilityController extends BaseController
         $this->tagModel = new Tag();
     }
 
-
     public function readAll()
     {
         try {
@@ -29,19 +28,13 @@ class FacilityController extends BaseController
             $facilities = $this->facilityModel->getAllFacilities();
 
             // Return the data as JSON with a 200 OK status code
-            header('Content-Type: application/json');
-            http_response_code(200);
-            echo json_encode($facilities);
+            $this->respondWithJson($facilities, 200);
         } catch (PDOException $e) {
             // Handle database errors
-            header('Content-Type: application/json');
-            http_response_code(500);
-            echo json_encode(['error' => 'Database Error: ' . $e->getMessage()]);
+            $this->handleError($e, 'Database Error');
         } catch (Exception $e) {
             // Handle other errors
-            header('Content-Type: application/json');
-            http_response_code(500);
-            echo json_encode(['error' => 'Error: ' . $e->getMessage()]);
+            $this->handleError($e, 'Error');
         }
     }
 
@@ -53,25 +46,17 @@ class FacilityController extends BaseController
 
             // Return the data as JSON with a 200 OK status code
             if ($facilityData) {
-                header('Content-Type: application/json');
-                http_response_code(200);
-                echo json_encode($facilityData);
+                $this->respondWithJson($facilityData, 200);
             } else {
-                // Handle error when no facility is found
-                header('Content-Type: application/json');
-                http_response_code(404);
-                echo json_encode(['error' => 'Facility not found.']);
+                // show message when no facility is found
+                $this->respondWithJson(['error' => 'Facility not found.'], 404);
             }
         } catch (PDOException $e) {
             // Handle database errors
-            header('Content-Type: application/json');
-            http_response_code(500);
-            echo json_encode(['error' => 'Database Error: ' . $e->getMessage()]);
+            $this->handleError($e, 'Database Error');
         } catch (Exception $e) {
             // Handle other errors
-            header('Content-Type: application/json');
-            http_response_code(500);
-            echo json_encode(['error' => 'Error: ' . $e->getMessage()]);
+            $this->handleError($e, 'Error');
         }
     }
 
@@ -103,22 +88,16 @@ class FacilityController extends BaseController
             $this->db->commit();
 
             // Return a success message with a 201 Created status code
-            header('Content-Type: application/json');
-            http_response_code(201);
-            echo json_encode(['message' => 'Facility, Location, and tags created successfully!']);
+            $this->respondWithJson(['message' => 'Facility, Location, and tags created successfully!'], 201);
         } catch (PDOException $e) {
             // Rollback the transaction in case of a database error
             $this->db->rollBack();
 
             // Handle database errors 
-            header('Content-Type: application/json');
-            http_response_code(500);
-            echo json_encode(['error' => 'Database Error: ' . $e->getMessage()]);
+            $this->handleError($e, 'Database Error');
         } catch (Exception $e) {
             // Handle other errors
-            header('Content-Type: application/json');
-            http_response_code(500);
-            echo json_encode(['error' => 'Error: ' . $e->getMessage()]);
+            $this->handleError($e, 'Error');
         }
     }
 
@@ -135,18 +114,10 @@ class FacilityController extends BaseController
             // Return the result as JSON with the appropriate HTTP status code
             header('Content-Type: application/json');
 
-            if (isset($result['error'])) {
-                http_response_code(500);
-            } else {
-                http_response_code(200);
-            }
-
             echo json_encode($result);
         } catch (Exception $e) {
-            // Handle other errors
-            header('Content-Type: application/json');
-            http_response_code(500);
-            echo json_encode(['error' => 'Error: ' . $e->getMessage()]);
+            // Handle errors
+            $this->handleError($e, 'Error');
         }
     }
 
@@ -159,18 +130,10 @@ class FacilityController extends BaseController
             // Return the result as JSON with the appropriate HTTP status code
             header('Content-Type: application/json');
 
-            if (isset($result['error'])) {
-                http_response_code(500);
-            } else {
-                http_response_code(200);
-            }
-
             echo json_encode($result);
         } catch (Exception $e) {
             // Handle other errors
-            header('Content-Type: application/json');
-            http_response_code(500);
-            echo json_encode(['error' => 'Error: ' . $e->getMessage()]);
+            $this->handleError($e, 'Error');
         }
     }
 
@@ -190,18 +153,30 @@ class FacilityController extends BaseController
 
             if ($result) {
                 // Return the result as JSON with a 200 OK status code
-                http_response_code(200);
-                echo json_encode($result);
+                $this->respondWithJson($result, 200);
             } else {
-                // Handle error when no facilities are found
-                http_response_code(404);
-                echo json_encode(['error' => 'No facilities found']);
+                // Show message when no facilities are found
+                $this->respondWithJson(['error' => 'No facilities found'], 404);
             }
         } catch (Exception $e) {
-            // Handle other errors
-            header('Content-Type: application/json');
-            http_response_code(500);
-            echo json_encode(['error' => 'Error: ' . $e->getMessage()]);
+            // Handle errors
+            $this->handleError($e, 'Error');
         }
+    }
+
+    // Method to respond with JSON and an HTTP status code
+    private function respondWithJson($data, $statusCode)
+    {
+        header('Content-Type: application/json');
+        http_response_code($statusCode);
+        echo json_encode($data);
+    }
+
+    // Method to handle errors and respond with JSON
+    private function handleError($e, $errorMessage)
+    {
+        header('Content-Type: application/json');
+        http_response_code(500);
+        echo json_encode(['error' => $errorMessage . ': ' . $e->getMessage()]);
     }
 }
