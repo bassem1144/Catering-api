@@ -104,7 +104,6 @@ class FacilityController extends BaseController
             // Create a new Facility
             $facility = new Facility;
             $facility->setName($_POST['name']);
-            $facility->setCreationDate();
 
             // Create a new Location
             $location = new Location;
@@ -129,8 +128,8 @@ class FacilityController extends BaseController
             $locationId = $this->db->getLastInsertedId();
 
             // Insert the facility into the database with the associated location ID
-            $facilityQuery = "INSERT INTO facilities (name, creation_date, location_id) VALUES (?, ?, ?)";
-            $facilityBind = [$facility->getName(), $facility->getCreationDate(), $locationId];
+            $facilityQuery = "INSERT INTO facilities (name, location_id) VALUES (?, ?)";
+            $facilityBind = [$facility->getName(), $locationId];
             $this->db->executeQuery($facilityQuery, $facilityBind);
 
             // Get the facility ID from the last inserted row
@@ -376,6 +375,4 @@ class FacilityController extends BaseController
             echo json_encode(['error' => 'Error: ' . $e->getMessage()]);
         }
     }
-
-
 }

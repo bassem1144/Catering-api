@@ -27,7 +27,7 @@ CREATE TABLE Tags (
 CREATE TABLE Facilities (
     facility_id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
-    creation_date DATE NOT NULL,
+    creation_date DATE DEFAULT CURRENT_DATE,
     location_id INT,
     CONSTRAINT fk_location FOREIGN KEY (location_id) REFERENCES Locations(location_id)
 );

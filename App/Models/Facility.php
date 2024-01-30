@@ -23,17 +23,6 @@ class Facility
         return $this->name;
     }
 
-    public function setCreationDate(): Facility
-    {
-        $this->creationDate = date("Y-m-d H:i:s");
-        return $this;
-    }
-
-    public function getCreationDate(): string
-    {
-        return $this->creationDate;
-    }
-
     public function setLocation(Location $location): Facility
     {
         $this->location = $location;
