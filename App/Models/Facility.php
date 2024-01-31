@@ -212,13 +212,29 @@ class Facility extends Injectable
     public function deleteFacility($facilityId)
     {
         try {
+            // Get the list of tags associated with the facility
+            $facilityTagsQuery = "SELECT tag_id FROM facility_tags WHERE facility_id = ?";
+            $facilityTags = $this->db->executeQuery($facilityTagsQuery, [$facilityId])->fetchAll(PDO::FETCH_COLUMN);
+
             // Delete facility_tags entries associated with the facility
-            $deleteFacility_TagsQuery = "DELETE FROM facility_tags WHERE facility_id = ?";
-            $this->db->executeQuery($deleteFacility_TagsQuery, [$facilityId]);
+            $deleteFacilityTagsQuery = "DELETE FROM facility_tags WHERE facility_id = ?";
+            $this->db->executeQuery($deleteFacilityTagsQuery, [$facilityId]);
 
             // Delete the facility entry
             $deleteFacilityQuery = "DELETE FROM facilities WHERE facility_id = ?";
             $this->db->executeQuery($deleteFacilityQuery, [$facilityId]);
+
+            // Check and delete tags that are not associated with any other facility
+            foreach ($facilityTags as $tagId) {
+                $checkTagQuery = "SELECT COUNT(*) FROM facility_tags WHERE tag_id = ?";
+                $tagUsageCount = $this->db->executeQuery($checkTagQuery, [$tagId])->fetchColumn();
+
+                if ($tagUsageCount == 0) {
+                    // If the tag is not associated with any other facility, delete it
+                    $deleteTagQuery = "DELETE FROM tags WHERE tag_id = ?";
+                    $this->db->executeQuery($deleteTagQuery, [$tagId]);
+                }
+            }
 
             // Return a success message
             return ['message' => 'Facility and its tags deleted successfully!'];
@@ -230,6 +246,7 @@ class Facility extends Injectable
             throw new Exception('Error: ' . $e->getMessage());
         }
     }
+
 
     public function searchFacilities($name, $city, $tagName)
     {
