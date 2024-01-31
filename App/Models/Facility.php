@@ -140,23 +140,6 @@ class Facility extends Injectable
             // Execute the update query for facilities
             $this->db->executeQuery($facilityUpdateQuery, $facilityBind);
 
-            // Define update query for locations
-            $locationUpdateQuery = "UPDATE locations 
-                                    SET city = ?, address = ?, zip_code = ?, country_code = ?, phone_number = ? 
-                                    WHERE location_id = ?";
-
-            $locationBind = [
-                $formData['location']['city'],
-                $formData['location']['address'],
-                $formData['location']['zip_code'],
-                $formData['location']['country_code'],
-                $formData['location']['phone_number'],
-                $facilityId
-            ];
-
-            // Execute the update query for locations
-            $this->db->executeQuery($locationUpdateQuery, $locationBind);
-
             // Handle tags
             if (isset($formData['tags'])) {
 
