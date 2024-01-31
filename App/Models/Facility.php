@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use PDO;
+use Exception;
+use PDOException;
 use App\Models\Tag;
 use App\Models\Location;
 use App\Plugins\Di\Injectable;
@@ -255,7 +257,11 @@ class Facility extends Injectable
             }
 
             if ($tagName !== '') {
-                $query .= " AND tags.tag_name LIKE :tagName";
+                $query .= " AND facilities.facility_id IN (
+                            SELECT facility_id FROM facility_tags
+                            JOIN tags ON facility_tags.tag_id = tags.tag_id
+                            WHERE tags.tag_name LIKE :tagName
+                            )";
                 $bind[':tagName'] = "%$tagName%";
             }
 
