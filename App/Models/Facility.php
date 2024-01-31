@@ -134,22 +134,29 @@ class Facility extends Injectable
     public function updateFacility($facilityId, $formData)
     {
         try {
-            // Define update queries and fields
-            $updateQueries = [
-                'name' => "UPDATE facilities SET name = ? WHERE facility_id = ?",
-                'city' => "UPDATE locations SET city = ? WHERE location_id = ?",
-                'address' => "UPDATE locations SET address = ? WHERE location_id = ?",
-                'zip_code' => "UPDATE locations SET zip_code = ? WHERE location_id = ?",
-                'country_code' => "UPDATE locations SET country_code = ? WHERE location_id = ?",
-                'phone_number' => "UPDATE locations SET phone_number = ? WHERE location_id = ?",
+            // Define update query for facilities
+            $facilityUpdateQuery = "UPDATE facilities SET name = ? WHERE facility_id = ?";
+            $facilityBind = [$formData['name'], $facilityId];
+
+            // Execute the update query for facilities
+            $this->db->executeQuery($facilityUpdateQuery, $facilityBind);
+
+            // Define update query for locations
+            $locationUpdateQuery = "UPDATE locations 
+                                    SET city = ?, address = ?, zip_code = ?, country_code = ?, phone_number = ? 
+                                    WHERE location_id = ?";
+
+            $locationBind = [
+                $formData['city'],
+                $formData['address'],
+                $formData['zip_code'],
+                $formData['country_code'],
+                $formData['phone_number'],
+                $facilityId
             ];
 
-            // loop through the fields and execute the update queries
-            foreach ($updateQueries as $field => $query) {
-                if (isset($formData[$field])) {
-                    $this->db->executeQuery($query, [$formData[$field], $facilityId]);
-                }
-            }
+            // Execute the update query for locations
+            $this->db->executeQuery($locationUpdateQuery, $locationBind);
 
             // Handle tags
             if (isset($formData['tags'])) {
