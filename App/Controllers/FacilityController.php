@@ -63,17 +63,21 @@ class FacilityController extends BaseController
     public function create()
     {
         try {
+            // Get JSON data from the request body
+            $jsonInput = file_get_contents('php://input');
+            $jsonData = json_decode($jsonInput, true);
+
             // Create a new Facility
             $facility = new Facility;
-            $facility->setName($_POST['name']);
+            $facility->setName($jsonData['name']);
 
             // Create a new Location
             $location = new Location;
-            $location->setCity($_POST['city']);
-            $location->setAddress($_POST['address']);
-            $location->setZipCode($_POST['zip_code']);
-            $location->setCountryCode($_POST['country_code']);
-            $location->setPhoneNumber($_POST['phone_number']);
+            $location->setCity($jsonData['location']['city']);
+            $location->setAddress($jsonData['location']['address']);
+            $location->setZipCode($jsonData['location']['zip_code']);
+            $location->setCountryCode($jsonData['location']['country_code']);
+            $location->setPhoneNumber($jsonData['location']['phone_number']);
 
             // Associate the location with the facility
             $facility->setLocation($location);
@@ -82,7 +86,7 @@ class FacilityController extends BaseController
             $this->db->beginTransaction();
 
             // Call the model methods to handle database insertion
-            $facilityId = $this->facilityModel->createFacility($facility, $location, $_POST['tags'], $this->tagModel);
+            $facilityId = $this->facilityModel->createFacility($facility, $location, $jsonData['tags'], $this->tagModel);
 
             // Commit the transaction
             $this->db->commit();
@@ -105,11 +109,11 @@ class FacilityController extends BaseController
     {
         try {
             // Get the updated data from the API request
-            $putData = file_get_contents('php://input');
-            parse_str($putData, $formData);
+            $jsonInput = file_get_contents('php://input');
+            $jsonData = json_decode($jsonInput, true);
 
             // Call the model method to handle database update
-            $result = $this->facilityModel->updateFacility($facilityId, $formData);
+            $result = $this->facilityModel->updateFacility($facilityId, $jsonData);
 
             // Return the result as JSON with the appropriate HTTP status code
             header('Content-Type: application/json');

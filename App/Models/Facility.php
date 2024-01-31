@@ -107,9 +107,8 @@ class Facility extends Injectable
     private function handleTags($facilityId, $tags)
     {
         if (isset($tags)) {
-            $tagsArray = explode(",", $tags);
 
-            foreach ($tagsArray as $tagName) {
+            foreach ($tags as $tagName) {
                 // Check if the tag already exists
                 $tagId = $this->tagModel->getTagIdByName($tagName);
 
@@ -147,11 +146,11 @@ class Facility extends Injectable
                                     WHERE location_id = ?";
 
             $locationBind = [
-                $formData['city'],
-                $formData['address'],
-                $formData['zip_code'],
-                $formData['country_code'],
-                $formData['phone_number'],
+                $formData['location']['city'],
+                $formData['location']['address'],
+                $formData['location']['zip_code'],
+                $formData['location']['country_code'],
+                $formData['location']['phone_number'],
                 $facilityId
             ];
 
@@ -160,13 +159,12 @@ class Facility extends Injectable
 
             // Handle tags
             if (isset($formData['tags'])) {
-                $tagsArray = explode(",", $formData['tags']);
 
                 // Delete existing tags for the facility
                 $deleteTagsQuery = "DELETE FROM facility_tags WHERE facility_id = ?";
                 $this->db->executeQuery($deleteTagsQuery, [$facilityId]);
 
-                foreach ($tagsArray as $tagName) {
+                foreach ($formData['tags'] as $tagName) {
                     // Check if the tag already exists
                     $tagQuery = "SELECT tag_id FROM tags WHERE tag_name = ?";
                     $tagBind = [$tagName];
