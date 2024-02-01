@@ -8,7 +8,7 @@ use App\Controllers\FacilityController;
 // Define routes here
 
 // Search for a facility by name, description, or tag
-$router->get('/api/facilities/search/', FacilityController::class . '@searchFacilities');
+// $router->get('/api/facilities/search/', FacilityController::class . '@searchFacilities');
 
 // Create a facility and its tags
 $router->post('/api/facilities', FacilityController::class . '@create');
@@ -17,7 +17,7 @@ $router->post('/api/facilities', FacilityController::class . '@create');
 $router->get('/api/facilities/{id}', FacilityController::class . '@read');
 
 // Read details of multiple facilities, including their locations and tags
-$router->get('/api/facilities', FacilityController::class . '@readAll');
+$router->get('/api/facilities', FacilityController::class . '@searchFacilities');
 
 // Update details of a facility, including its tags
 $router->put('/api/facilities/{id}', FacilityController::class . '@update');

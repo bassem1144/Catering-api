@@ -26,26 +26,37 @@ class FacilityController extends BaseController
     }
 
     /**
-     * Retrieve all facilities and their details.
+     * Retrieve facilities based on optional filters or all facilities if no filters are provided.
      * 
      * @throws PDOException if a database error occurs.
      * @throws Exception If an error occurs during the process.
      * 
-     * @return array An array containing details of all facilities.
+     * @return array An array containing details of the facilities.
      */
-    public function readAll()
+    public function searchFacilities()
     {
         try {
-            // Get facilities from the model
-            $facilities = $this->facilityModel->getAllFacilities();
+            // Get query parameters from the request
+            $name = $_GET['name'] ?? '';
+            $city = $_GET['city'] ?? '';
+            $tagName = $_GET['tag'] ?? '';
 
-            // Return the data as JSON with a 200 OK status code
-            $this->respondWithJson($facilities, 200);
-        } catch (PDOException $e) {
-            // Handle database errors
-            $this->handleError($e, 'Database Error');
+            // Call the model method to handle database search
+            $result = $this->facilityModel->searchFacilities(
+                $name,
+                $city,
+                $tagName
+            );
+
+            if ($result) {
+                // Return the result as JSON with a 200 OK status code
+                $this->respondWithJson($result, 200);
+            } else {
+                // Show message when no facilities are found
+                $this->respondWithJson(['error' => 'No facilities found'], 404);
+            }
         } catch (Exception $e) {
-            // Handle other errors
+            // Handle errors
             $this->handleError($e, 'Error');
         }
     }
@@ -181,38 +192,6 @@ class FacilityController extends BaseController
             $this->respondWithJson($result, 200);
         } catch (Exception $e) {
             // Handle other errors
-            $this->handleError($e, 'Error');
-        }
-    }
-
-    /**
-     * Search for facilities by name, city or tag.
-     *
-     * @throws PDOException if a database error occurs.
-     * @throws Exception If an error occurs during the process.
-     * 
-     * @return void
-     */
-    public function searchFacilities()
-    {
-        try {
-            // Get query parameters from the request
-            $name = $_GET['name'] ?? '';
-            $city = $_GET['city'] ?? '';
-            $tagName = $_GET['tag'] ?? '';
-
-            // Call the model method to handle database search
-            $result = $this->facilityModel->searchFacilities($name, $city, $tagName);
-
-            if ($result) {
-                // Return the result as JSON with a 200 OK status code
-                $this->respondWithJson($result, 200);
-            } else {
-                // Show message when no facilities are found
-                $this->respondWithJson(['error' => 'No facilities found'], 404);
-            }
-        } catch (Exception $e) {
-            // Handle errors
             $this->handleError($e, 'Error');
         }
     }

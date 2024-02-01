@@ -30,37 +30,65 @@ class Facility extends Injectable
     }
 
     /**
-     * Retrieve all facilities and their details.
+     * Retrieve facilities based on optional filters or all facilities if no filters are provided.
+     * 
+     * 
+     * @param string $name The name of the facility to search for.
+     * @param string $city The city of the facility to search for.
+     * @param string $tagName The tag of the facility to search for.
      * 
      * @throws PDOException if a database error occurs.
-     * @throws Exception If an error occurs during the process.
+     * @throws Exception for other errors.
      * 
-     * @return array An array containing details of all facilities.
+     * @return array An array containing details of the facilities.
      */
-    public function getAllFacilities()
+    public function searchFacilities(string $name, string $city, string $tagName)
     {
         try {
-            // Fetch all facilities with their locations and tags
-            $query = "SELECT facilities.*, locations.*, GROUP_CONCAT(tags.tag_name SEPARATOR ', ') as tag_names
-                  FROM facilities
-                  LEFT JOIN locations ON facilities.location_id = locations.location_id
-                  LEFT JOIN facility_tags ON facilities.facility_id = facility_tags.facility_id
-                  LEFT JOIN tags ON facility_tags.tag_id = tags.tag_id
-                  GROUP BY facilities.facility_id";
+            // SQL query to search for facilities
+            $query =
+                "SELECT facilities.*, locations.city, GROUP_CONCAT(tags.tag_name) as tag_names
+                      FROM facilities
+                      JOIN locations ON facilities.location_id = locations.location_id
+                      LEFT JOIN facility_tags ON facilities.facility_id = facility_tags.facility_id
+                      LEFT JOIN tags ON facility_tags.tag_id = tags.tag_id
+                      WHERE 1";
 
-            $result = $this->db->executeQuery($query);
+            // Initialize an array to store bind values
+            $bind = [];
 
-            // Check if there are any results
-            if ($result) {
-                return $result->fetchAll(PDO::FETCH_ASSOC);
-            } else {
-                return [];
+            // Add conditions to the query and bind values based on provided parameters
+            if ($name !== '') {
+                $query .= " AND facilities.name LIKE :name";
+                $bind[':name'] = "%$name%";
             }
+
+            if ($city !== '') {
+                $query .= " AND locations.city LIKE :city";
+                $bind[':city'] = "%$city%";
+            }
+
+            if ($tagName !== '') {
+                $query .= " AND facilities.facility_id IN (
+                            SELECT facility_id FROM facility_tags
+                            JOIN tags ON facility_tags.tag_id = tags.tag_id
+                            WHERE tags.tag_name LIKE :tagName
+                            )";
+                $bind[':tagName'] = "%$tagName%";
+            }
+
+            // Complete the query
+            $query .= " GROUP BY facilities.facility_id";
+
+            // Execute the query
+            $result = $this->db->executeQuery($query, $bind)->fetchAll(PDO::FETCH_ASSOC);
+
+            return $result;
         } catch (PDOException $e) {
-            // Log or handle the database error
+            // Handle database errors 
             throw new Exception('Database Error: ' . $e->getMessage());
         } catch (Exception $e) {
-            // Log or handle other errors
+            // Handle other errors
             throw new Exception('Error: ' . $e->getMessage());
         }
     }
@@ -316,69 +344,6 @@ class Facility extends Injectable
             throw new Exception('Error: ' . $e->getMessage());
         }
     }
-
-    /**
-     * Search for facilities by name, city, or tag.
-     * 
-     * @param string $name The name of the facility to search for.
-     * @param string $city The city of the facility to search for.
-     * @param string $tagName The tag of the facility to search for.
-     * 
-     * @throws PDOException if a database error occurs.
-     * @throws Exception for other errors.
-     * 
-     * @return array The list of facilities matching the search criteria.
-     */
-    public function searchFacilities(string $name, string $city, string $tagName)
-    {
-        try {
-            // SQL query to search for facilities
-            $query = "SELECT facilities.*, locations.city, GROUP_CONCAT(tags.tag_name) as tag_names
-                      FROM facilities
-                      JOIN locations ON facilities.location_id = locations.location_id
-                      LEFT JOIN facility_tags ON facilities.facility_id = facility_tags.facility_id
-                      LEFT JOIN tags ON facility_tags.tag_id = tags.tag_id
-                      WHERE 1";
-
-            // Initialize an array to store bind values
-            $bind = [];
-
-            // Add conditions to the query and bind values based on provided parameters
-            if ($name !== '') {
-                $query .= " AND facilities.name LIKE :name";
-                $bind[':name'] = "%$name%";
-            }
-
-            if ($city !== '') {
-                $query .= " AND locations.city LIKE :city";
-                $bind[':city'] = "%$city%";
-            }
-
-            if ($tagName !== '') {
-                $query .= " AND facilities.facility_id IN (
-                            SELECT facility_id FROM facility_tags
-                            JOIN tags ON facility_tags.tag_id = tags.tag_id
-                            WHERE tags.tag_name LIKE :tagName
-                            )";
-                $bind[':tagName'] = "%$tagName%";
-            }
-
-            // Complete the query
-            $query .= " GROUP BY facilities.facility_id";
-
-            // Execute the query
-            $result = $this->db->executeQuery($query, $bind)->fetchAll(PDO::FETCH_ASSOC);
-
-            return $result;
-        } catch (PDOException $e) {
-            // Handle database errors 
-            throw new Exception('Database Error: ' . $e->getMessage());
-        } catch (Exception $e) {
-            // Handle other errors
-            throw new Exception('Error: ' . $e->getMessage());
-        }
-    }
-
 
     /**
      * Set the name of the facility.
