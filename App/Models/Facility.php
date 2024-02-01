@@ -15,16 +15,28 @@ class Facility extends Injectable
     private $location;
     private $tags = [];
 
-    //
     private $tagModel;
     private $locationModel;
 
+    /**
+     * Constructor for the Facility class.
+     * 
+     * @return void
+     */
     public function __construct()
     {
         $this->tagModel =  new Tag;
         $this->locationModel = new Location;
     }
 
+    /**
+     * Retrieve all facilities and their details.
+     * 
+     * @throws PDOException if a database error occurs.
+     * @throws Exception If an error occurs during the process.
+     * 
+     * @return array An array containing details of all facilities.
+     */
     public function getAllFacilities()
     {
         try {
@@ -53,8 +65,17 @@ class Facility extends Injectable
         }
     }
 
-
-    public function getFacilityById($facilityId)
+    /**
+     * Retrieve details of a specific facility by ID.
+     *
+     * @param int $facilityId The ID of the facility to retrieve.
+     *
+     * @throws PDOException if a database error occurs.
+     * @throws Exception If an error occurs during the process.
+     * 
+     * @return array An array containing details of the facility.
+     */
+    public function getFacilityById(int $facilityId)
     {
         try {
             // Fetch data for the specified facility
@@ -83,7 +104,19 @@ class Facility extends Injectable
         }
     }
 
-    public function createFacility(Facility $facility, Location $location, $tags)
+    /**
+     * Create a new facility, associated location, and tags.
+     *
+     * @param Facility $facility The facility to create.
+     * @param Location $location The location to create.
+     * @param array $tags The tags to associate with the facility.
+     *
+     * @throws PDOException if a database error occurs.
+     * @throws Exception for other errors.
+     * 
+     * @return int The ID of the newly created facility.
+     */
+    public function createFacility(Facility $facility, Location $location, array $tags)
     {
         // Insert the location into the database
         $locationId = $this->locationModel->insertLocation($location);
@@ -97,7 +130,18 @@ class Facility extends Injectable
         return $facilityId;
     }
 
-    private function insertFacility(Facility $facility, $locationId)
+    /**
+     * Insert the facility into the database with the associated location ID.
+     *
+     * @param Facility $facility The facility to insert.
+     * @param int $locationId The ID of the location to associate with the facility.
+     *
+     * @throws PDOException if a database error occurs.
+     * @throws Exception for other errors.
+     * 
+     * @return int The ID of the newly created facility.
+     */
+    private function insertFacility(Facility $facility, int $locationId)
     {
         $query = "INSERT INTO facilities (name, location_id) VALUES (?, ?)";
         $bind = [$facility->getName(), $locationId];
@@ -106,7 +150,18 @@ class Facility extends Injectable
         return $this->db->getLastInsertedId();
     }
 
-    private function handleTags($facilityId, $tags)
+    /**
+     * Handle tags for the facility.
+     *
+     * @param int $facilityId The ID of the facility to associate the tags with.
+     * @param array $tags The tags to associate with the facility.
+     *
+     * @throws PDOException if a database error occurs.
+     * @throws Exception for other errors.
+     * 
+     * @return void
+     */
+    private function handleTags(int $facilityId, array $tags)
     {
         if (isset($tags)) {
 
@@ -125,14 +180,36 @@ class Facility extends Injectable
         }
     }
 
-    private function insertFacilityTag($facilityId, $tagId)
+    /**
+     * Insert the association into the Facility_Tags table.
+     *
+     * @param int $facilityId The ID of the facility to associate the tag with.
+     * @param int $tagId The ID of the tag to associate with the facility.
+     *
+     * @throws PDOException if a database error occurs.
+     * @throws Exception for other errors.
+     * 
+     * @return void
+     */
+    private function insertFacilityTag(int $facilityId, int $tagId)
     {
         $query = "INSERT INTO facility_tags (facility_id, tag_id) VALUES (?, ?)";
         $bind = [$facilityId, $tagId];
         $this->db->executeQuery($query, $bind);
     }
 
-    public function updateFacility($facilityId, $formData)
+    /**
+     * Update a facility and its tags.
+     *
+     * @param int $facilityId The ID of the facility to update.
+     * @param array $formData The data to update the facility with.
+     *
+     * @throws PDOException if a database error occurs.
+     * @throws Exception for other errors.
+     * 
+     * @return array The result of the update.
+     */
+    public function updateFacility(int $facilityId, array $formData)
     {
         try {
             // Define update query for facilities
@@ -192,7 +269,17 @@ class Facility extends Injectable
         }
     }
 
-    public function deleteFacility($facilityId)
+    /**
+     * Delete a facility and its tags.
+     *
+     * @param int $facilityId The ID of the facility to delete.
+     *
+     * @throws PDOException if a database error occurs.
+     * @throws Exception for other errors.
+     * 
+     * @return array The result of the deletion.
+     */
+    public function deleteFacility(int $facilityId)
     {
         try {
             // Get the list of tags associated with the facility
@@ -230,8 +317,19 @@ class Facility extends Injectable
         }
     }
 
-
-    public function searchFacilities($name, $city, $tagName)
+    /**
+     * Search for facilities by name, city, or tag.
+     * 
+     * @param string $name The name of the facility to search for.
+     * @param string $city The city of the facility to search for.
+     * @param string $tagName The tag of the facility to search for.
+     * 
+     * @throws PDOException if a database error occurs.
+     * @throws Exception for other errors.
+     * 
+     * @return array The list of facilities matching the search criteria.
+     */
+    public function searchFacilities(string $name, string $city, string $tagName)
     {
         try {
             // SQL query to search for facilities
@@ -281,34 +379,71 @@ class Facility extends Injectable
         }
     }
 
+
+    /**
+     * Set the name of the facility.
+     *
+     * @param string $name The new name for the facility.
+     *
+     * @return Facility Returns the current instance of Facility for method chaining.
+     */
     public function setName(string $name): Facility
     {
         $this->name = $name;
         return $this;
     }
 
+    /**
+     * Get the name of the facility.
+     *
+     * @return string The name of the facility.
+     */
     public function getName(): string
     {
         return $this->name;
     }
 
+    /**
+     * Set the location of the facility.
+     *
+     * @param Location $location The new location for the facility.
+     *
+     * @return Facility Returns the current instance of Facility for method chaining.
+     */
     public function setLocation(Location $location): Facility
     {
         $this->location = $location;
         return $this;
     }
 
+    /**
+     * Get the location of the facility.
+     *
+     * @return Location The location of the facility.
+     */
     public function getLocation(): Location
     {
         return $this->location;
     }
 
+    /**
+     * Add a tag to the facility.
+     *
+     * @param Tag $tag The tag to add to the facility.
+     *
+     * @return Facility Returns the current instance of Facility for method chaining.
+     */
     public function addTag(Tag $tag): Facility
     {
         $this->tags[] = $tag;
         return $this;
     }
 
+    /**
+     * Get the tags associated with the facility.
+     *
+     * @return array The tags associated with the facility.
+     */
     public function getTags(): array
     {
         return $this->tags;

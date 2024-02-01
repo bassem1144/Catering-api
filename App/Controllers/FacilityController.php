@@ -2,7 +2,8 @@
 
 namespace App\Controllers;
 
-use PDO;
+use Exception;
+use PDOException;
 use App\Models\Tag;
 use App\Models\Facility;
 use App\Models\Location;
@@ -10,17 +11,28 @@ use App\Models\Location;
 class FacilityController extends BaseController
 {
 
-    private $facilityModel;
-    private $locationModel;
-    private $tagModel;
+    private Facility $facilityModel;
+    private Tag $tagModel;
 
+    /**
+     * Constructor for the FacilityController class.
+     * 
+     * @return void
+     */
     public function __construct()
     {
         $this->facilityModel = new Facility();
-        $this->locationModel = new Location();
         $this->tagModel = new Tag();
     }
 
+    /**
+     * Retrieve all facilities and their details.
+     * 
+     * @throws PDOException if a database error occurs.
+     * @throws Exception If an error occurs during the process.
+     * 
+     * @return array An array containing details of all facilities.
+     */
     public function readAll()
     {
         try {
@@ -38,7 +50,17 @@ class FacilityController extends BaseController
         }
     }
 
-    public function read($facilityId)
+    /**
+     * Retrieve details of a specific facility by ID.
+     *
+     * @param int $facilityId The ID of the facility to retrieve.
+     *
+     * @throws PDOException if a database error occurs.
+     * @throws Exception If an error occurs during the process.
+     * 
+     * @return array An array containing details of the facility.
+     */
+    public function read(int $facilityId)
     {
         try {
             // Get facility data from the model
@@ -48,7 +70,7 @@ class FacilityController extends BaseController
             if ($facilityData) {
                 $this->respondWithJson($facilityData, 200);
             } else {
-                // show message when no facility is found
+                // Show message when no facility is found
                 $this->respondWithJson(['error' => 'Facility not found.'], 404);
             }
         } catch (PDOException $e) {
@@ -60,6 +82,14 @@ class FacilityController extends BaseController
         }
     }
 
+    /**
+     * Create a new facility, associated location, and tags.
+     *
+     * @throws PDOException if a database error occurs.
+     * @throws Exception for other errors.
+     * 
+     * @return void
+     */
     public function create()
     {
         try {
@@ -105,7 +135,16 @@ class FacilityController extends BaseController
         }
     }
 
-    public function update($facilityId)
+    /**
+     * Update a facility and its tags.
+     *
+     * @param int $facilityId The ID of the facility to update.
+     *
+     * @throws Exception If an error occurs during the process.
+     * 
+     * @return void
+     */
+    public function update(int $facilityId)
     {
         try {
             // Get the updated data from the API request
@@ -115,32 +154,45 @@ class FacilityController extends BaseController
             // Call the model method to handle database update
             $result = $this->facilityModel->updateFacility($facilityId, $jsonData);
 
-            // Return the result as JSON with the appropriate HTTP status code
-            header('Content-Type: application/json');
-
-            echo json_encode($result);
+            // Return the result as JSON with 200 HTTP status code
+            $this->respondWithJson($result, 200);
         } catch (Exception $e) {
             // Handle errors
             $this->handleError($e, 'Error');
         }
     }
 
-    public function delete($facilityId)
+    /**
+     * Delete a facility and its tags.
+     *
+     * @param int $facilityId The ID of the facility to delete.
+     *
+     * @throws Exception If an error occurs during the process.
+     * 
+     * @return void
+     */
+    public function delete(int $facilityId)
     {
         try {
             // Call the model method to handle database deletion
             $result = $this->facilityModel->deleteFacility($facilityId);
 
-            // Return the result as JSON with the appropriate HTTP status code
-            header('Content-Type: application/json');
-
-            echo json_encode($result);
+            // Return the result as JSON with 200 HTTP status code
+            $this->respondWithJson($result, 200);
         } catch (Exception $e) {
             // Handle other errors
             $this->handleError($e, 'Error');
         }
     }
 
+    /**
+     * Search for facilities by name, city or tag.
+     *
+     * @throws PDOException if a database error occurs.
+     * @throws Exception If an error occurs during the process.
+     * 
+     * @return void
+     */
     public function searchFacilities()
     {
         try {
@@ -151,9 +203,6 @@ class FacilityController extends BaseController
 
             // Call the model method to handle database search
             $result = $this->facilityModel->searchFacilities($name, $city, $tagName);
-
-            // Return the result as JSON with the appropriate HTTP status code
-            header('Content-Type: application/json');
 
             if ($result) {
                 // Return the result as JSON with a 200 OK status code
@@ -168,7 +217,12 @@ class FacilityController extends BaseController
         }
     }
 
-    // Method to respond with JSON and an HTTP status code
+    /**
+     * Private function to respond with JSON data and an HTTP status code.
+     * 
+     * @param array $data The data to return.
+     * @param int $statusCode The HTTP status code to return.
+     */
     private function respondWithJson($data, $statusCode)
     {
         header('Content-Type: application/json');
@@ -176,7 +230,12 @@ class FacilityController extends BaseController
         echo json_encode($data);
     }
 
-    // Method to handle errors and respond with JSON
+    /**
+     * Private function to handle errors.
+     * 
+     * @param Exception $e The exception that was thrown.
+     * @param string $errorMessage The error message to return.
+     */
     private function handleError($e, $errorMessage)
     {
         header('Content-Type: application/json');
