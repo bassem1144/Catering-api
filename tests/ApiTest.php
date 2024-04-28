@@ -1,6 +1,5 @@
 <?php
 
-use App\Models\Facility;
 use PHPUnit\Framework\TestCase;
 
 class ApiTest extends TestCase
@@ -38,15 +37,10 @@ class ApiTest extends TestCase
         // Decode the JSON response
         $responseData = json_decode($response, true);
 
-        // Check if the response data has expected keys and values
-        // $this->assertArrayHasKey('id', $responseData);
-        // $this->assertEquals(1, $responseData['id']); // Assuming the returned id is 1
-        // $this->assertArrayHasKey('name', $responseData);
-        // $this->assertArrayHasKey('location', $responseData);
-        // $this->assertArrayHasKey('tags', $responseData);
+        $this->assertArrayHasKey('name', $responseData);
+        $this->assertArrayHasKey('city', $responseData);
+        $this->assertArrayHasKey('tag_names', $responseData);
     }
-
-
 
     public function testCreateFacility()
     {
@@ -115,7 +109,7 @@ class ApiTest extends TestCase
     public function testDeleteFacility()
     {
         // Replace this URL with the actual URL of your API endpoint
-        $url = 'http://localhost/Catering_api/api/facilities/1';
+        $url = 'http://localhost/Catering_api/api/facilities/10';
 
         // Delete an existing facility using a DELETE request
         $options = [
