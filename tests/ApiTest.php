@@ -5,9 +5,16 @@ use PHPUnit\Framework\TestCase;
 class ApiTest extends TestCase
 {
 
+    public function setUp(): void
+    {
+        # Turn on error reporting
+        error_reporting(E_ALL);
+        // ...
+    }
+
     public function testApiEndpoint()
     {
-        // Replace this URL with the actual URL of your API endpoint
+        // Api url
         $url = 'http://localhost/Catering_api/api/facilities/';
 
         // Make a GET request to the API endpoint
@@ -22,7 +29,7 @@ class ApiTest extends TestCase
 
     public function testReadFacility()
     {
-        // Replace this URL with the actual URL of your API endpoint
+        // Api url
         $url = 'http://localhost/Catering_api/api/facilities/1';
 
         // Make a GET request to read the details of a facility
@@ -44,7 +51,7 @@ class ApiTest extends TestCase
 
     public function testCreateFacility()
     {
-        // Replace this URL with the actual URL of your API endpoint
+        // Api url
         $url = 'http://localhost/Catering_api/api/facilities';
 
         // Sample data to create a new facility
@@ -76,7 +83,7 @@ class ApiTest extends TestCase
 
     public function testUpdateFacility()
     {
-        // Replace this URL with the actual URL of your API endpoint
+        // Api url
         $url = 'http://localhost/Catering_api/api/facilities/1';
 
         // Sample data to update an existing facility
@@ -108,7 +115,7 @@ class ApiTest extends TestCase
 
     public function testDeleteFacility()
     {
-        // Replace this URL with the actual URL of your API endpoint
+        // Api url
         $url = 'http://localhost/Catering_api/api/facilities/10';
 
         // Delete an existing facility using a DELETE request
@@ -128,18 +135,25 @@ class ApiTest extends TestCase
         $this->assertNotFalse($result);
     }
 
-    public function testSearchFacility()
+    public function testSearchFacilities()
     {
-        // Replace this URL with the actual URL of your API endpoint
-        $url = 'http://localhost/Catering_api/api/facilities/search/?name=dtt';
 
-        // Make a GET request to search for facilities
+        // Construct the API endpoint URL
+        $url = 'http://localhost/Catering_api/api/facilities?city=amsterdam';
+
+        // Make a GET request to the API endpoint
         $response = file_get_contents($url);
 
-        // Check if the response is not empty
-        $this->assertNotEmpty($response);
+        // Decode the JSON response
+        $responseData = json_decode($response, true);
 
-        // Check if the response is not false
-        $this->assertNotFalse($response);
+        // Assert that the response is not empty
+        $this->assertNotEmpty($responseData);
+
+        // Check if the city in the response matches the expected value "amsterdam"
+        foreach ($responseData as $facility) {
+            $this->assertEquals('Amsterdam', $facility['city']);
+        }
+        
     }
 }
