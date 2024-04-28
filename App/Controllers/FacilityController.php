@@ -3,6 +3,8 @@
 namespace App\Controllers;
 
 use PDO;
+use Exception;
+use PDOException;
 use App\Models\Tag;
 use App\Models\Facility;
 use App\Models\Location;
