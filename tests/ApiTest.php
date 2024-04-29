@@ -9,7 +9,6 @@ class ApiTest extends TestCase
     {
         # Turn on error reporting
         error_reporting(E_ALL);
-        // ...
     }
 
     public function testApiEndpoint()
